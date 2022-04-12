@@ -1,8 +1,9 @@
 const ClientError = require('../../exceptions/ClientError');
 
 class PlaylistsHandler {
-  constructor(service, validator) {
+  constructor(service, songsService, validator) {
     this._service = service;
+    this._songsService = songsService;
     this._validator = validator;
 
     this.postPlaylistHandler = this.postPlaylistHandler.bind(this);
@@ -53,11 +54,11 @@ class PlaylistsHandler {
   async getPlaylistsHandler(request, h) {
     try {
       const { id: credentialId } = request.auth.credentials;
-      const playlist = await this._service.getPlaylists(credentialId);
+      const playlists = await this._service.getPlaylists(credentialId);
       return {
         status: 'success',
         data: {
-          playlist,
+          playlists,
         },
       };
     } catch (error) {
@@ -82,7 +83,7 @@ class PlaylistsHandler {
 
   async deletePlaylistByIdHandler(request, h) {
     try {
-      const { playlistId } = request.params;
+      const { id: playlistId } = request.params;
       const { id: credentialId } = request.auth.credentials;
       await this._service.verifyPlaylistOwner(playlistId, credentialId);
       await this._service.deletePlaylistById(playlistId);
@@ -118,6 +119,7 @@ class PlaylistsHandler {
       const { songId } = request.payload;
       const { id: credentialId } = request.auth.credentials;
 
+      await this._songsService.getSongById(songId);
       await this._service.verifyPlaylistAccess(playlistId, credentialId);
       await this._service.addSongToPlaylist(playlistId, songId);
 
@@ -183,12 +185,13 @@ class PlaylistsHandler {
 
   async deleteSongByIdHandler(request, h) {
     try {
+      this._validator.validateSongPayload(request.payload);
       const { playlistId } = request.params;
       const { songId } = request.payload;
       const { id: credentialId } = request.auth.credentials;
 
       await this._service.verifyPlaylistAccess(playlistId, credentialId);
-      await this._service.deleteSongFromPlaylist(playlistId, songId);
+      await this._service.deleteSongFromPlaylist(playlistId, songId, credentialId);
 
       return {
         status: 'success',
