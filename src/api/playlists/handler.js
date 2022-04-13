@@ -83,7 +83,7 @@ class PlaylistsHandler {
 
   async deletePlaylistByIdHandler(request, h) {
     try {
-      const { id: playlistId } = request.params;
+      const { playlistId } = request.params;
       const { id: credentialId } = request.auth.credentials;
       await this._service.verifyPlaylistOwner(playlistId, credentialId);
       await this._service.deletePlaylistById(playlistId);
@@ -192,7 +192,7 @@ class PlaylistsHandler {
   async deleteSongByIdHandler(request, h) {
     try {
       this._validator.validateSongPayload(request.payload);
-      const { id: playlistId } = request.params;
+      const { playlistId } = request.params;
       const { songId } = request.payload;
       const { id: credentialId } = request.auth.credentials;
 
